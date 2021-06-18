@@ -3,47 +3,49 @@ import numpy as np
 import regex as re
 import os
 import json
-from tensorflow.keras.layers import Input,LSTM,RepeatVector,Dense,SimpleRNN,GRU,Embedding
+from tensorflow.keras.layers import Input, LSTM, RepeatVector, Dense, SimpleRNN, GRU, Embedding
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import TimeDistributed,BatchNormalization,Dropout,Concatenate
-from tensorflow.keras.optimizers import Adam,RMSprop,SGD
+from tensorflow.keras.layers import TimeDistributed, BatchNormalization, Dropout, Concatenate
+from tensorflow.keras.optimizers import Adam, RMSprop, SGD
 import tensorflow.keras.backend as K
+from datetime import datetime
+
 
 class ConditionalGenerator():
 
     def __init__(self):
-        #data params
+        # data params
         self.samples = {"data": []}
         self.filenames = []
         self.path = './csmdata/data'
         self.unused_samples = []
 
-        #general training params
+        # general training params
         self.epochs = 1000
         self.batch_size = 10
         self.lr = 0.001
         self.decay = 0.0
-        self.loss_weights = [1.0,0.001]
+        self.loss_weights = [1.0, 0.001]
         self.alpha = K.variable(1.0, name='alpha')
 
-        #sample shapes
+        # sample shapes
         self.cut_length = 200
         self.step_size = 50
-        self.dof=99
+        self.dof = 99
         self.nb_label = 10
         self.latent_dim = 50
 
-        #model params
-        self.dropout_dis_list=[0.0,0.0]
-        self.hidden_dim_enc_list=[100,100]
-        self.activation_enc_list=['tanh','tanh']
-        self.hidden_dim_dec_list=[100,100]
-        self.activation_dec_list=['tanh','tanh']
-        self.hidden_dim_dis_list=[100,40]
-        self.activation_dis_list=['relu','relu']
+        # model params
+        self.dropout_dis_list = [0.0, 0.0]
+        self.hidden_dim_enc_list = [100, 100]
+        self.activation_enc_list = ['tanh', 'tanh']
+        self.hidden_dim_dec_list = [100, 100]
+        self.activation_dec_list = ['tanh', 'tanh']
+        self.hidden_dim_dis_list = [100, 40]
+        self.activation_dis_list = ['relu', 'relu']
         self.latent_activation = 'tanh'
 
-        #models
+        # models
         self.decoder = self.Decoder()
         self.encoder = self.Encoder()
         self.discmt = self.Discriminator()
@@ -51,60 +53,60 @@ class ConditionalGenerator():
 
         self.compile()
 
-
     def Encoder(self):
         """
         Defines the Encoder model
         :return: keras model
         """
-        motion_input = Input(shape = (self.cut_length,self.dof),name='encoder_input')
-        label_input = Input(batch_size=self.batch_size, shape=(self.nb_label,),name='label_input_enc')
+        motion_input = Input(shape=(self.cut_length, self.dof), name='encoder_input')
+        label_input = Input(batch_size=self.batch_size, shape=(self.nb_label,), name='label_input_enc')
         label_seq = label_input
         label_seq = RepeatVector(self.cut_length)(label_seq)
-        encoded = Concatenate(axis=2)([motion_input,label_seq])
+        encoded = Concatenate(axis=2)([motion_input, label_seq])
         for i, (dim, activation) in enumerate(zip(self.hidden_dim_enc_list, self.activation_enc_list)):
             encoded = LSTM(units=dim, activation=activation, return_sequences=True)(encoded)
 
-
-        encoded = LSTM(units=self.latent_dim,activation=self.latent_activation,name = 'encoded_layer',return_sequences=False)(encoded)
+        encoded = LSTM(units=self.latent_dim, activation=self.latent_activation, name='encoded_layer',
+                       return_sequences=False)(encoded)
         encoded = Dense(units=self.latent_dim, activation='linear')(encoded)
 
-        return Model(inputs=[motion_input,label_input], outputs = encoded, name='Encoder')
+        return Model(inputs=[motion_input, label_input], outputs=encoded, name='Encoder')
 
     def Decoder(self):
         """
         Defines the decoder model
         :return: keras model
         """
-        latent_input = Input(batch_size=self.batch_size, shape=(self.latent_dim,),name='latent_input')
+        latent_input = Input(batch_size=self.batch_size, shape=(self.latent_dim,), name='latent_input')
         latent_input_seq = RepeatVector(self.cut_length)(latent_input)
 
         label_input = Input(batch_size=self.batch_size, shape=(self.nb_label,), name='label_input_dec')
 
         label_seq = label_input
         label_seq = RepeatVector(self.cut_length)(label_seq)
-        decoded = Concatenate(axis=2)([latent_input_seq,label_seq])
+        decoded = Concatenate(axis=2)([latent_input_seq, label_seq])
 
-        for i,(dim, activation) in enumerate(zip(self.hidden_dim_dec_list,self.activation_dec_list)):
+        for i, (dim, activation) in enumerate(zip(self.hidden_dim_dec_list, self.activation_dec_list)):
             decoded = LSTM(units=dim, activation=activation, return_sequences=True)(decoded)
-        decoded = SimpleRNN(units=self.dof,activation='sigmoid',name='decoder_output',return_sequences=True)(decoded)
-        return Model(inputs=[latent_input,label_input], outputs=decoded,name='Decoder')
+        decoded = SimpleRNN(units=self.dof, activation='sigmoid', name='decoder_output', return_sequences=True)(decoded)
+        return Model(inputs=[latent_input, label_input], outputs=decoded, name='Decoder')
 
     def Discriminator(self):
         """
         Defines the discriminator model
         :return: keras model
         """
-        input = Input(shape=(self.latent_dim,),name='discmt_input')
-        for i,(dim,activation,dropout) in enumerate(zip(self.hidden_dim_dis_list, self.activation_dis_list,self.dropout_dis_list)):
-            if i ==0:
-                discmt = Dense(dim,activation=activation)(input)
+        input = Input(shape=(self.latent_dim,), name='discmt_input')
+        for i, (dim, activation, dropout) in enumerate(
+                zip(self.hidden_dim_dis_list, self.activation_dis_list, self.dropout_dis_list)):
+            if i == 0:
+                discmt = Dense(dim, activation=activation)(input)
             else:
                 discmt = Dropout(dropout)(discmt)
-                discmt = Dense(dim,activation=activation)(discmt)
+                discmt = Dense(dim, activation=activation)(discmt)
 
-        discmt = Dense(1,activation='sigmoid',name='discmt_output')(discmt)
-        return Model(inputs=input,outputs=discmt,name='Discmt')
+        discmt = Dense(1, activation='sigmoid', name='discmt_output')(discmt)
+        return Model(inputs=input, outputs=discmt, name='Discmt')
 
     def CASAE(self):
         """
@@ -114,32 +116,31 @@ class ConditionalGenerator():
         casae = self.decoder([self.encoder.output, self.decoder.inputs[1]])
         self.discmt.trainable = False
         aux_output_discmt = self.discmt(self.encoder.output)
-        return Model(inputs=[self.encoder.inputs, self.decoder.inputs[1]], outputs=[casae, aux_output_discmt], name="CASAE")
+        return Model(inputs=[self.encoder.inputs, self.decoder.inputs[1]], outputs=[casae, aux_output_discmt],
+                     name="CASAE")
 
     def compile(self):
         """
         Compiles the network
         """
-        optimizer_discmt = SGD(lr=self.lr,decay=self.decay)
-        optimizer_casae = SGD(lr=self.lr,decay=self.decay)
+        optimizer_discmt = SGD(lr=self.lr, decay=self.decay)
+        optimizer_casae = SGD(lr=self.lr, decay=self.decay)
         self.discmt.trainable = True
-        self.discmt.compile(optimizer_discmt,loss='binary_crossentropy',metrics=['accuracy'])
+        self.discmt.compile(optimizer_discmt, loss='binary_crossentropy', metrics=['accuracy'])
         self.casae.compile(optimizer_casae, loss={'Decoder': self.loss_mse_velocity_loss,
                                                   'Discmt': 'binary_crossentropy'},
-                                                   loss_weights=self.loss_weights,
-                                                   metrics={'Decoder':'mse'})
+                           loss_weights=self.loss_weights,
+                           metrics={'Decoder': 'mse'})
         print(self.decoder.summary())
         print(self.casae.summary())
 
-    def loss_mse_velocity_loss(self,y_true,y_pred):
+    def loss_mse_velocity_loss(self, y_true, y_pred):
         """
         Helper method for optimizers.
         """
-        mse = K.mean(K.square(y_pred-y_true))
-        mse_v = K.mean(K.square((y_pred[:,1:,:] - y_pred[:,0:-1,:])-(y_true[:,1:,:] - y_true[:,0:-1,:])))
-
-        return mse+self.alpha*mse_v
-
+        mse = K.mean(K.square(y_pred - y_true))
+        mse_v = K.mean(K.square((y_pred[:, 1:, :] - y_pred[:, 0:-1, :]) - (y_true[:, 1:, :] - y_true[:, 0:-1, :])))
+        return mse + self.alpha * mse_v
 
     def store_filenames(self):
         """
@@ -149,7 +150,6 @@ class ConditionalGenerator():
         for filename in os.listdir(self.path):
             if filename.endswith('.csm'):
                 self.filenames.append(filename)
-
 
     def read_data(self, filename):
         """
@@ -176,10 +176,10 @@ class ConditionalGenerator():
             # get motion type from filename as one hot vector
             motions = {
                 "knock": [1, 0, 0, 0, 0],
-                "lift":  [0, 1, 0, 0, 0],
-                "seq":   [0, 0, 1, 0, 0],
+                "lift": [0, 1, 0, 0, 0],
+                "seq": [0, 0, 1, 0, 0],
                 "throw": [0, 0, 0, 1, 0],
-                "walk":  [0, 0, 0, 0, 1]
+                "walk": [0, 0, 0, 0, 1]
             }
             motion = motions[filename[1]]
             content = data.read()
@@ -189,18 +189,19 @@ class ConditionalGenerator():
             # this gives the order of the joints in the samples data
             order = list(filter(None, re.split('\s', sections[11])))
             sequence = []
-            for frame in list(filter(None, re.split('\n',sections[12]))):  # split on newline, remove empty
+            for frame in list(filter(None, re.split('\n', sections[12]))):  # split on newline, remove empty
                 # split on blank space, remove empty and 'DROPOUT', convert to list, then map to float and back to list...
                 parts = list(map(float, list(filter(None, [x.replace('DROPOUT', '') for x in re.split('\s', frame)]))))
-                del parts[0] # first element is frame number, we don't need this
+                del parts[0]  # first element is frame number, we don't need this
                 sequence.append(parts)
 
-            if len(sequence[0]) == 99: #most frames have 99 points, we need a fixed input size for the network
-                for i in range(0,len(sequence)-self.cut_length,self.step_size):
-                    s = {"emotion": emotion, "motion": motion, "order": order, "sequence": sequence[i:i+self.cut_length]}
+            if len(sequence[0]) == 99:  # most frames have 99 points, we need a fixed input size for the network
+                for i in range(0, len(sequence) - self.cut_length, self.step_size):
+                    s = {"emotion": emotion, "motion": motion, "order": order,
+                         "sequence": sequence[i:i + self.cut_length]}
                     self.samples["data"].append(s)
 
-        #print(str(len(self.samples["data"])) + " samples loaded.")
+        # print(str(len(self.samples["data"])) + " samples loaded.")
         return self.samples
 
     def make_batch(self):
@@ -215,6 +216,9 @@ class ConditionalGenerator():
                 if len(batch) >= self.batch_size:
                     return batch
                 batch.append(s)
+        if len(self.filenames) == 0:
+            print("No more training samples... Stopping...")
+            return None
         for f in range(len(self.filenames)):
             self.unused_samples = self.read_data(self.filenames[f])
             self.filenames.pop(f)
@@ -241,13 +245,13 @@ class ConditionalGenerator():
         Saves the current state of all models
         :param id: unique extension to the filename
         """
-        with open("casae"+id+".yaml", "w") as file:
+        with open("casae" + id + ".yaml", "w") as file:
             file.write(self.casae.to_yaml())
-        with open("encoder"+id+".yaml") as file:
+        with open("encoder" + id + ".yaml", "w") as file:
             file.write(self.encoder.to_yaml())
-        with open("decoder"+id+".yaml") as file:
+        with open("decoder" + id + ".yaml", "w") as file:
             file.write(self.decoder.to_yaml())
-        with open("discmt"+id+".yaml") as file:
+        with open("discmt" + id + ".yaml", "w") as file:
             file.write(self.discmt.to_yaml())
 
     def load_models(self, filepaths):
@@ -260,9 +264,35 @@ class ConditionalGenerator():
         self.decoder.load_weights(filepaths[2])
         self.discmt.load_weights(filepaths[3])
 
+    def write_data(self, data, path, file):
 
+        filestring = \
+            """$Comments \t File auto-generated with CASAE 
+                        
+$Filename %s
+$Datetime %s
 
-    def write_data(self):
+$FirstFrame 1
+$LastFrame %d
+$NumFrames %d
+$NumMarkers 33
+$CaptureRate 60
+$Rate 60
+
+$Order
+LFHD RFHD LBHD RBHD C7 CLAV STRN LSHO LELB LWRA LWRB LFIN RSHO RELB RWRA RWRB RFIN T10 SACR LFWT RFWT LBWT RBWT LKNE RKNE LANK RANK LHEL RHEL LMT5 RMT5 LTOE RTOE 
+
+$Points
+""" % (file, datetime.now(), data.shape[0], data.shape[0])
+        index = 1
+        for frame in data:
+            filestring = filestring + str(index) + "\t"
+            for value in frame:
+                filestring= filestring + str(value) + "\t"
+            filestring = filestring + "\n\n"
+            index += 1
+        with open(os.path.join(path, file), "w") as file:
+            file.write(filestring)
         return
 
     def train(self):
@@ -271,25 +301,35 @@ class ConditionalGenerator():
         """
         self.store_filenames()
         for i in range(self.epochs):
-            print("epoch:", i+1, "/", self.epochs)
+            print("epoch:", i + 1, "/", self.epochs)
             batch = self.make_batch()
+            if batch == None:
+                return -1
             motion_batch, label_batch = self.split_batches(batch)
-            latent_codes = self.encoder.predict(x=[np.asarray(motion_batch), np.asarray(label_batch)], batch_size=self.batch_size)
-            random_noise = np.random.multivariate_normal(np.zeros(self.latent_dim), np.eye(N=self.latent_dim) * 1.0, size=self.batch_size)
+            latent_codes = self.encoder.predict(x=[np.asarray(motion_batch), np.asarray(label_batch)],
+                                                batch_size=self.batch_size)
+            random_noise = np.random.multivariate_normal(np.zeros(self.latent_dim), np.eye(N=self.latent_dim) * 1.0,
+                                                         size=self.batch_size)
             X = np.concatenate([latent_codes, random_noise], axis=0)
             Y = [1.0] * self.batch_size + [0.0] * self.batch_size
-            self.discmt.trainable=True
-            self.discmt.train_on_batch(x=np.asarray(X),y=np.asarray(Y))
+            self.discmt.trainable = True
+            self.discmt.train_on_batch(x=np.asarray(X), y=np.asarray(Y))
             Y_hat = np.asarray([1.] * self.batch_size, dtype=np.float32)
             self.casae.train_on_batch(x=[np.asarray(motion_batch), np.asarray(label_batch), np.asarray(label_batch)],
                                       y={"Decoder": np.asarray(motion_batch), "Discmt": np.asarray(Y_hat)})
-        return
 
-    def predict(self):
-        return
+    def predict(self, target):
+        noise = np.random.multivariate_normal(np.zeros(self.latent_dim), np.eye(N=self.latent_dim) * 1.0,
+                                              size=self.batch_size)
+        target = np.repeat(np.asarray(target), noise.shape[0]).reshape([10, 10])
+        return self.decoder.predict(x=[noise, target])
 
 
 generator = ConditionalGenerator()
 generator.store_filenames()
-
+generator.decoder.summary()
 generator.train()
+generator.save_models("1")
+samples = generator.predict([0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+for i, s in enumerate(samples):
+ generator.write_data(s,  ".", "sample%d.csm"%i)
