@@ -21,7 +21,7 @@ class ConditionalGenerator():
         self.unused_samples = []
 
         # general training params
-        self.epochs = 1000
+        self.epochs = 10000
         self.batch_size = 10
         self.lr = 0.001
         self.decay = 0.0
@@ -193,6 +193,8 @@ class ConditionalGenerator():
                 # split on blank space, remove empty and 'DROPOUT', convert to list, then map to float and back to list...
                 parts = list(map(float, list(filter(None, [x.replace('DROPOUT', '') for x in re.split('\s', frame)]))))
                 del parts[0]  # first element is frame number, we don't need this
+                for i, p in enumerate(parts): # normalizing step
+                    parts[i] = p + 2000 / 4000
                 sequence.append(parts)
 
             if len(sequence[0]) == 99:  # most frames have 99 points, we need a fixed input size for the network
@@ -287,7 +289,8 @@ $Points
         index = 1
         for frame in data:
             filestring = filestring + str(index) + "\t"
-            for value in frame:
+            for value in frame: # denormalizing
+                value = 4000 * value - 2000
                 filestring= filestring + str(value) + "\t"
             filestring = filestring + "\n\n"
             index += 1
@@ -318,6 +321,7 @@ $Points
             self.casae.train_on_batch(x=[np.asarray(motion_batch), np.asarray(label_batch), np.asarray(label_batch)],
                                       y={"Decoder": np.asarray(motion_batch), "Discmt": np.asarray(Y_hat)})
 
+
     def predict(self, target):
         noise = np.random.multivariate_normal(np.zeros(self.latent_dim), np.eye(N=self.latent_dim) * 1.0,
                                               size=self.batch_size)
@@ -329,7 +333,7 @@ generator = ConditionalGenerator()
 generator.store_filenames()
 generator.decoder.summary()
 generator.train()
-generator.save_models("1")
-samples = generator.predict([0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+generator.save_models("2")
+samples = generator.predict([0, 1, 0, 0, 0, 1, 0, 0, 0, 0])
 for i, s in enumerate(samples):
- generator.write_data(s,  ".", "sample%d.csm"%i)
+ generator.write_data(s,  ".", "sample_10k_angry_knock%d.csm"%i)
