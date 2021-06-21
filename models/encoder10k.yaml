@@ -1,0 +1,226 @@
+backend: tensorflow
+class_name: Functional
+config:
+  input_layers:
+  - - encoder_input
+    - 0
+    - 0
+  - - label_input_enc
+    - 0
+    - 0
+  layers:
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple
+      - 10
+      - 10
+      dtype: float32
+      name: label_input_enc
+      ragged: false
+      sparse: false
+    inbound_nodes: []
+    name: label_input_enc
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple
+      - null
+      - 200
+      - 99
+      dtype: float32
+      name: encoder_input
+      ragged: false
+      sparse: false
+    inbound_nodes: []
+    name: encoder_input
+  - class_name: RepeatVector
+    config:
+      dtype: float32
+      n: 200
+      name: repeat_vector_2
+      trainable: true
+    inbound_nodes:
+    - - - label_input_enc
+        - 0
+        - 0
+        - {}
+    name: repeat_vector_2
+  - class_name: Concatenate
+    config:
+      axis: 2
+      dtype: float32
+      name: concatenate_1
+      trainable: true
+    inbound_nodes:
+    - - - encoder_input
+        - 0
+        - 0
+        - &id001 {}
+      - - repeat_vector_2
+        - 0
+        - 0
+        - *id001
+    name: concatenate_1
+  - class_name: LSTM
+    config:
+      activation: tanh
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      dropout: 0.0
+      dtype: float32
+      go_backwards: false
+      implementation: 2
+      kernel_constraint: null
+      kernel_initializer:
+        class_name: GlorotUniform
+        config:
+          seed: null
+      kernel_regularizer: null
+      name: lstm_2
+      recurrent_activation: sigmoid
+      recurrent_constraint: null
+      recurrent_dropout: 0.0
+      recurrent_initializer:
+        class_name: Orthogonal
+        config:
+          gain: 1.0
+          seed: null
+      recurrent_regularizer: null
+      return_sequences: true
+      return_state: false
+      stateful: false
+      time_major: false
+      trainable: true
+      unit_forget_bias: true
+      units: 100
+      unroll: false
+      use_bias: true
+    inbound_nodes:
+    - - - concatenate_1
+        - 0
+        - 0
+        - {}
+    name: lstm_2
+  - class_name: LSTM
+    config:
+      activation: tanh
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      dropout: 0.0
+      dtype: float32
+      go_backwards: false
+      implementation: 2
+      kernel_constraint: null
+      kernel_initializer:
+        class_name: GlorotUniform
+        config:
+          seed: null
+      kernel_regularizer: null
+      name: lstm_3
+      recurrent_activation: sigmoid
+      recurrent_constraint: null
+      recurrent_dropout: 0.0
+      recurrent_initializer:
+        class_name: Orthogonal
+        config:
+          gain: 1.0
+          seed: null
+      recurrent_regularizer: null
+      return_sequences: true
+      return_state: false
+      stateful: false
+      time_major: false
+      trainable: true
+      unit_forget_bias: true
+      units: 100
+      unroll: false
+      use_bias: true
+    inbound_nodes:
+    - - - lstm_2
+        - 0
+        - 0
+        - {}
+    name: lstm_3
+  - class_name: LSTM
+    config:
+      activation: tanh
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      dropout: 0.0
+      dtype: float32
+      go_backwards: false
+      implementation: 2
+      kernel_constraint: null
+      kernel_initializer:
+        class_name: GlorotUniform
+        config:
+          seed: null
+      kernel_regularizer: null
+      name: encoded_layer
+      recurrent_activation: sigmoid
+      recurrent_constraint: null
+      recurrent_dropout: 0.0
+      recurrent_initializer:
+        class_name: Orthogonal
+        config:
+          gain: 1.0
+          seed: null
+      recurrent_regularizer: null
+      return_sequences: false
+      return_state: false
+      stateful: false
+      time_major: false
+      trainable: true
+      unit_forget_bias: true
+      units: 50
+      unroll: false
+      use_bias: true
+    inbound_nodes:
+    - - - lstm_3
+        - 0
+        - 0
+        - {}
+    name: encoded_layer
+  - class_name: Dense
+    config:
+      activation: linear
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      dtype: float32
+      kernel_constraint: null
+      kernel_initializer:
+        class_name: GlorotUniform
+        config:
+          seed: null
+      kernel_regularizer: null
+      name: dense
+      trainable: true
+      units: 50
+      use_bias: true
+    inbound_nodes:
+    - - - encoded_layer
+        - 0
+        - 0
+        - {}
+    name: dense
+  name: Encoder
+  output_layers:
+  - - dense
+    - 0
+    - 0
+keras_version: 2.4.0
