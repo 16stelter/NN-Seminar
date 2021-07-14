@@ -1,0 +1,18 @@
+\frametitle{Motivation}
+	\begin{itemize}
+		\item Generating motions is hard
+		\item No cheap and fast alternatives
+		\item Flexibility
+	\end{itemize}
+    \begin{columns}
+    	\begin{column}{0.5\linewidth}
+    		\begin{center}
+    		    \includegraphics[width=0.8\linewidth]{images/kfa.png}
+    		\end{center}
+    	\end{column}
+        \begin{column}{0.5\linewidth}
+        	\begin{center}
+        		\includegraphics[height=0.3\textheight]{images/mocap.jpg}\cite{mocap}
+        	\end{center}
+        \end{column}
+    \end{columns}

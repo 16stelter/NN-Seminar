@@ -1,0 +1,15 @@
+\begin{thebibliography}{1}
+
+\bibitem{mocap}
+Lee Rickwood.
+\newblock Special suit uses motion capture technology to help parkinson’s
+  patients.
+\newblock
+  \tiny\url{https://whatsyourtech.ca/2016/11/11/special-suit-uses-motion-capture-technology-to-help-parkinsons-patients/}\normalsize.
+
+\bibitem{wang}
+Qi~Wang, Thierry Arti{\`e}res, Mickael Chen, and Ludovic Denoyer.
+\newblock Adversarial learning for modeling human motion.
+\newblock {\em The Visual Computer}, 36(1):141--160, 2020.
+
+\end{thebibliography}

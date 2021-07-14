@@ -1,0 +1,51 @@
+This is BibTeX, Version 0.99d
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: WTM_latex.aux
+Reallocating 'name_of_file' (item size: 1) to 6 items.
+The style file: plain.bst
+Reallocating 'name_of_file' (item size: 1) to 8 items.
+Database file #1: bib.bib
+Warning--entry type for "mocap" isn't style-file defined
+--line 1 of file bib.bib
+You've used 2 entries,
+            2118 wiz_defined-function locations,
+            509 strings with 4383 characters,
+and the built_in function-call counts, 619 in all, are:
+= -- 58
+> -- 30
+< -- 0
++ -- 12
+- -- 10
+* -- 42
+:= -- 110
+add.period$ -- 6
+call.type$ -- 2
+change.case$ -- 11
+chr.to.int$ -- 0
+cite$ -- 2
+duplicate$ -- 18
+empty$ -- 50
+format.name$ -- 10
+if$ -- 124
+int.to.chr$ -- 0
+int.to.str$ -- 2
+missing$ -- 1
+newline$ -- 13
+num.names$ -- 4
+pop$ -- 13
+preamble$ -- 1
+purify$ -- 9
+quote$ -- 0
+skip$ -- 15
+stack$ -- 0
+substring$ -- 35
+swap$ -- 2
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 8
+warning$ -- 0
+while$ -- 6
+width$ -- 3
+write$ -- 22
+(There was 1 warning)

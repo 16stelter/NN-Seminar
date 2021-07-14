@@ -1,0 +1,325 @@
+\documentclass[14pt]{beamer}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Meta informations:
+\newcommand{\trauthor}{Sebastian Stelter}
+\newcommand{\trtype}{Seminar} %{Workshop}
+\newcommand{\trcourse}{Neural Networks}
+\newcommand{\trtitle}{Style transfer for human motion with transfer with adversarial learning}
+\newcommand{\trmatrikelnummer}{6944438}
+\newcommand{\tremail}{6stelter@informatik.uni-hamburg.de}
+\newcommand{\trinstitute}{Dept. Informatik -- Knowledge Technology, WTM}
+\newcommand{\trwebsiteordate}{{http://www.informatik.uni-hamburg.de/WTM/}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Languages:
+
+% Falls die Ausarbeitung in Deutsch erfolgt:
+% \usepackage[german]{babel}
+% \usepackage[T1]{fontenc}
+% \usepackage[latin1]{inputenc}
+% \usepackage[latin9]{inputenc}	 				
+% \selectlanguage{german}
+
+% If the thesis is written in English:
+\usepackage[english]{babel} 						
+\selectlanguage{english}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bind packages:
+\setbeamertemplate{bibliography item}{\insertbiblabel}
+\usepackage{beamerthemesplit}
+\usetheme{Boadilla}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Frankfurt}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Madrid}
+%\usetheme{Warsaw }
+%\usecolortheme{dolphin}
+%\setbeamertemplate{sections/subsections in toc}[sections numbered]
+%\beamertemplatenavigationsymbolsempty
+%\setbeamertemplate{headline}[default] 	% deaktiviert die Kopfzeile
+\setbeamertemplate{navigation symbols}{}% deaktiviert Navigationssymbole
+%\useinnertheme{rounded}
+
+\usepackage{acronym}                    % Acronyms
+\usepackage{algorithmic}								% Algorithms and Pseudocode
+\usepackage{algorithm}									% Algorithms and Pseudocode
+\usepackage{amsfonts}                   % AMS Math Packet (Fonts)
+\usepackage{amsmath}                    % AMS Math Packet
+\usepackage{amssymb}                    % Additional mathematical symbols
+\usepackage{amsthm}
+\usepackage{color}                      % Enables defining of colors via \definecolor
+\usepackage{fancybox}                   % Gleichungen einrahmen
+\usepackage{fancyhdr}										% Paket zur schickeren der Gestaltung der 
+\usepackage{graphicx}                   % Inclusion of graphics
+%\usepackage{latexsym}                  % Special symbols
+\usepackage{longtable}									% Allow tables over several parges
+\usepackage{listings}                   % Nicer source code listings
+\usepackage{lmodern}
+\usepackage{multicol}										% Content of a table over several columns
+\usepackage{multirow}										% Content of a table over several rows
+\usepackage{rotating}										% Alows to rotate text and objects
+\usepackage[section]{placeins}          % Ermoeglich \Floatbarrier fuer Gleitobj. 
+\usepackage[hang]{subfigure}            % Allows to use multiple (partial) figures in a fig
+%\usepackage[font=footnotesize,labelfont=rm]{subfig}	% Pictures in a floating environment
+\usepackage{tabularx}										% Tables with fixed width but variable rows
+\usepackage{url,xspace,boxedminipage}   % Accurate display of URLs
+
+\definecolor{uhhRed}{RGB}{254,0,0}		  % Official Uni Hamburg Red
+\definecolor{uhhGrey}{RGB}{136,136,136} % Official Uni Hamburg Grey
+\definecolor{uhhLightGrey}{RGB}{180,180,180} % Official Uni Hamburg LightGrey
+\definecolor{uhhLightLightGrey}{RGB}{220,220,220} % Official Uni Hamburg LightLightGrey
+\setbeamertemplate{itemize items}[ball]
+\setbeamercolor{title}{fg=uhhRed,bg=white}
+\setbeamercolor{title in head/foot}{bg=uhhRed}
+\setbeamercolor{block title}{bg=uhhGrey,fg=white}
+\setbeamercolor{block body}{bg=uhhLightLightGrey,fg=black}
+\setbeamercolor{section in head/foot}{bg=black}
+\setbeamercolor{frametitle}{bg=white,fg=uhhRed}
+\setbeamercolor{author in head/foot}{bg=black,fg=white}
+\setbeamercolor{author in footline}{bg=white,fg=black}
+\setbeamercolor*{item}{fg=uhhRed}
+\setbeamercolor*{section in toc}{fg=black}
+\setbeamercolor*{separation line}{bg=black}
+\setbeamerfont*{author in footline}{size=\scriptsize,series=\mdseries}
+\setbeamerfont*{institute}{size=\footnotesize}
+
+\newcommand{\opticalseperator}{0.0025\paperwidth}
+
+\institute{Universit\"at Hamburg\\\trinstitute}
+\title{\trtitle}
+\subtitle{\trtype}
+\author{\trauthor}
+\date{}
+\logo{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Configurationen:
+%\hypersetup{pdfpagemode=FullScreen}
+
+\hyphenation{whe-ther} 									% Manually use: "\-" in a word: Staats\-ver\-trag
+
+%\lstloadlanguages{C}                   % Set the default language for listings
+\DeclareGraphicsExtensions{.pdf,.svg,.jpg,.png,.eps} % first try pdf, then eps, png and jpg
+\graphicspath{{./src/}} 								% Path to a folder where all pictures are located
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Costom Definitions:
+\setbeamertemplate{title page}
+{
+  \vbox{}
+	\vspace{0.4cm}
+  \begin{centering}
+    \begin{beamercolorbox}[sep=8pt,center,colsep=-4bp]{title}
+      \usebeamerfont{title}\inserttitle\par%
+      \ifx\insertsubtitle\@empty%
+      \else%
+        \vskip0.20em%
+        {\usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle\par}%
+      \fi%     
+    \end{beamercolorbox}%
+		\vskip0.4em
+    \begin{beamercolorbox}[sep=8pt,center,colsep=-4bp,rounded=true,shadow=true]{author}
+      \usebeamerfont{author}\insertauthor \\ \insertinstitute
+    \end{beamercolorbox}
+
+	  \vfill
+	  \begin{beamercolorbox}[ht=8ex,center]{}
+		  \includegraphics[width=0.20\paperwidth]{wtmIcon.pdf}
+	  \end{beamercolorbox}%
+    \begin{beamercolorbox}[sep=8pt,center,colsep=-4bp,rounded=true,shadow=true]{institute}
+      \usebeamerfont{institute}\trwebsiteordate
+    \end{beamercolorbox}
+		\vspace{-0.1cm}
+  \end{centering}
+}
+
+\setbeamertemplate{frametitle}
+{
+\begin{beamercolorbox}[wd=\paperwidth,ht=3.8ex,dp=1.2ex,leftskip=0pt,rightskip=4.0ex]{frametitle}%
+		\usebeamerfont*{frametitle}\centerline{\insertframetitle}
+	\end{beamercolorbox}
+	\vspace{0.0cm}
+}
+
+\setbeamertemplate{footline}
+{
+  \leavevmode
+	\vspace{-0.05cm}
+  \hbox{
+	  \begin{beamercolorbox}[wd=.32\paperwidth,ht=4.8ex,dp=2.7ex,center]{author in footline}
+	    \hspace*{2ex}\usebeamerfont*{author in footline}\trauthor
+	  \end{beamercolorbox}%
+	  \begin{beamercolorbox}[wd=.60\paperwidth,ht=4.8ex,dp=2.7ex,center]{author in footline}
+	    \usebeamerfont*{author in footline}\trtitle
+	  \end{beamercolorbox}%
+	  \begin{beamercolorbox}[wd=.07\paperwidth,ht=4.8ex,dp=2.7ex,center]{author in footline}
+	    \usebeamerfont*{author in footline}\insertframenumber{}
+	  \end{beamercolorbox}
+  }
+	\vspace{0.15cm}
+}
+\renewcommand{\normalsize}{\fontsize{13.5pt}{13.5pt}\selectfont}
+\renewcommand{\large}{\fontsize{15.8pt}{15.8pt}\selectfont}
+\renewcommand{\Large}{\fontsize{19.0pt}{19.0pt}\selectfont}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Additional 'theorem' and 'definition' blocks:
+\newtheorem{axiom}{Axiom}[section] 	
+%\newtheorem{axiom}{Fakt}[section]			% Wenn in Deutsch geschrieben wird.
+%Usage:%\begin{axiom}[optional description]%Main part%\end{fakt}
+
+%Additional types of axioms:
+\newtheorem{observation}[axiom]{Observation}
+
+%Additional types of definitions:
+\theoremstyle{remark}
+%\newtheorem{remark}[section]{Bemerkung} % Wenn in Deutsch geschrieben wird.
+\newtheorem{remark}[section]{Remark} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Provides TODOs within the margin:
+\newcommand{\TODO}[1]{\marginpar{\emph{\small{{\bf TODO: } #1}}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Abbreviations and mathematical symbols
+\newcommand{\modd}{\text{ mod }}
+\newcommand{\RS}{\mathbb{R}}
+\newcommand{\NS}{\mathbb{N}}
+\newcommand{\ZS}{\mathbb{Z}}
+\newcommand{\dnormal}{\mathit{N}}
+\newcommand{\duniform}{\mathit{U}}
+
+\newcommand{\erdos}{Erd\H{o}s}
+\newcommand{\renyi}{-R\'{e}nyi}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Display of TOCs:
+\AtBeginSection[]
+{
+	\setcounter{tocdepth}{2}  
+	\frame
+	{
+	  \frametitle{Outline}
+		\tableofcontents[currentsection]
+	}
+}
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document:
+\begin{document}
+\renewcommand{\arraystretch}{1.2}
+
+\begin{frame}[plain] % plain => kein Rahmen
+  \titlepage
+\end{frame}
+%\setcounter{framenumber}{0}
+
+\frame{
+	\frametitle{Outline}
+	\tableofcontents
+}
+\section{Motivation}
+\begin{frame}[fragile]
+    \frametitle{Motivation}
+	\begin{itemize}
+		\item Generating motions is hard
+		\item No cheap and fast alternatives
+		\item Flexibility
+	\end{itemize}
+    \begin{columns}
+    	\begin{column}{0.5\linewidth}
+    		\begin{center}
+    		    \includegraphics[width=0.8\linewidth]{images/kfa.png}
+    		\end{center}
+    	\end{column}
+        \begin{column}{0.5\linewidth}
+        	\begin{center}
+        		\includegraphics[height=0.3\textheight]{images/mocap.jpg}\cite{mocap}
+        	\end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+\begin{frame}
+	\frametitle{Dataset}
+	\begin{columns}
+		\begin{column}{0.5\linewidth}\centering
+			EMILYA Dataset
+			
+			\begin{itemize}
+				\item Biovision Hierarchical Data (\textbf{.bvh})
+				\item Calibration data in same file
+				\item Metadata, then keyframed joint positions
+				\item 8206 samples, 11 actors
+				\item 8x7 different combinations
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.5\linewidth}\centering
+			Body Movement Library
+			
+			\begin{itemize}
+				\item Character Studio Marker (\textbf{.csm})
+				\item Separate files with calibration data
+				\item Metadata, then keyframed joint positions
+				\item 1323 samples, 30 actors
+				\item 5x5 different combinations
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+\section{Network Architecture}
+\begin{frame}{Network Architecture}
+	\centering
+	\includegraphics[width=.6\linewidth]{images/sae.png}\cite{wang}
+\end{frame}
+\begin{frame}{Network Architecture}
+	\centering
+	\includegraphics[width=.6\linewidth]{images/asae.png}\cite{wang}
+\end{frame}
+\begin{frame}{Network Architecture}
+	\centering
+	\includegraphics[width=.6\linewidth]{images/casae.png}\cite{wang}
+\end{frame}
+\section{Implementation}
+\begin{frame}{Implementation}
+	\centering
+	\includegraphics[width=0.6\linewidth]{images/network.pdf}
+\end{frame}
+\section{Results}
+\begin{frame}{Target}
+	\centering
+		\begin{tabular}{c c c c}
+		\includegraphics[width=0.2\textwidth]{../../frames/347.png} & \includegraphics[width=0.2\textwidth]{../../frames/351.png} & \includegraphics[width=0.2\textwidth]{../../frames/354.png} & \includegraphics[width=0.2\textwidth]{../../frames/356.png} \\
+		\includegraphics[width=0.2\textwidth]{../../frames/360.png} & \includegraphics[width=0.2\textwidth]{../../frames/371.png} & \includegraphics[width=0.2\textwidth]{../../frames/384.png} & \includegraphics[width=0.2\textwidth]{../../frames/390.png}
+	\end{tabular}
+\end{frame}
+\begin{frame}{Result}
+	\centering
+	\begin{tabular}{c c}
+		\includegraphics[width=0.45\textwidth]{../../frames2/69.png} &
+		\includegraphics[width=0.45\textwidth]{../../frames2/70.png}
+	\end{tabular}
+\end{frame}
+\section{Evaluation}
+\begin{frame}{Reasons for Failure}
+	\begin{itemize}
+		\item Smaller dataset
+		\item No consideration for calibration data
+		\item Network size
+	\end{itemize}
+\end{frame}
+\bibliographystyle{plain}
+\bibliography{bib.bib}
+\begin{frame}
+	\vspace*{\fill}
+	\begin{center}
+		\color{red}\LARGE{Thank you for your attention!}
+		\newline
+		
+		\color{black}\Large{Feel free to ask question.}
+	\end{center}
+	\vspace*{\fill}
+\end{frame}
+\end{document}

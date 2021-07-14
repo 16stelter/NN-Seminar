@@ -331,6 +331,10 @@ $Points
 
 generator = ConditionalGenerator()
 generator.store_filenames()
+number = 0
+print(len(generator.filenames))
+
+
 generator.decoder.summary()
 generator.train()
 generator.save_models("2")
