@@ -1,2 +1,1 @@
-# NN-seminar
-
+# CASAE encoder-decoder model for the neural networks project. Based on [Adversarial learning for modeling human motion](https://www.researchgate.net/publication/327536563_Adversarial_learning_for_modeling_human_motion)
